@@ -1,168 +1,44 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OMC · Scanner</title>
-
-    <!-- Fonts & Icons -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-    />
-
-    <!-- Styles -->
+    <title>OMC Attendance Scanner</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
-      <!-- Header simple -->
       <h1>OMC Attendance</h1>
-      <div class="subtitle">
-        <i
-          class="fas fa-qrcode"
-          style="color: var(--primary); margin-right: 6px"
-        ></i>
-        Scanner de présence
-      </div>
 
-      <!-- Vidéo -->
-      <div class="video-container">
-        <video id="video" autoplay playsinline></video>
-      </div>
+      <!-- Video feed for QR scanning -->
+      <video id="video" width="300" height="400"></video>
 
-      <!-- Statut -->
-      <div class="status">
-        <span class="status-dot" id="status-dot"></span>
-        <span id="status-text">Scanner désactivé</span>
-      </div>
-
-      <!-- Boutons -->
-      <div class="buttons">
-        <button id="start-btn" class="btn btn-start">
-          <i class="fas fa-play"></i>
-          Démarrer
-        </button>
-        <button id="stop-btn" class="btn btn-stop">
-          <i class="fas fa-stop"></i>
-          Arrêter
-        </button>
+      <!-- Buttons -->
+      <div class="controls">
+        <button id="start-btn">Start Scanner</button>
+        <button id="stop-btn">Stop Scanner</button>
       </div>
 
       <!-- Messages -->
       <div id="message-container"></div>
-
-      <!-- Stats minimales -->
-      <div class="stats">
-        <div class="stat-card">
-          <div class="stat-label">Aujourd'hui</div>
-          <div class="stat-number" id="today-count">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Total</div>
-          <div class="stat-number" id="total-count">-</div>
-        </div>
-      </div>
-
-      <!-- Scans récents -->
-      <div class="recent-title">
-        <i class="fas fa-clock"></i>
-        Derniers scans
-      </div>
-      <div class="scans-list" id="recent-scans-list">
-        <div class="scan-item">
-          <span class="scan-name">
-            <i
-              class="fas fa-circle"
-              style="font-size: 8px; color: var(--gray)"
-            ></i>
-            Aucun scan pour l'instant
-          </span>
-        </div>
-      </div>
-
-      <!-- Hint -->
-      <div class="hint">
-        <i class="fas fa-camera"></i>
-        Placez le QR code dans le cadre
-      </div>
     </div>
 
-    <!-- Scripts -->
     <script type="module" src="./js/firebase.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
-    <script type="module" src="./js/scanner.js"></script>
-    <script type="module" src="./js/ui.js"></script>
 
+    <!-- QR decoder library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
+    <!-- Our modules -->
     <script type="module">
       import { startScanner, stopScanner } from "./js/scanner.js";
       import { showMessage } from "./js/ui.js";
-      import { db } from "./js/firebase.js";
-      import {
-        collection,
-        query,
-        orderBy,
-        limit,
-        onSnapshot,
-      } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
       const video = document.getElementById("video");
       const startBtn = document.getElementById("start-btn");
       const stopBtn = document.getElementById("stop-btn");
-      const statusDot = document.getElementById("status-dot");
-      const statusText = document.getElementById("status-text");
 
-      // Start
-      startBtn.addEventListener("click", () => {
-        startScanner(video);
-        statusDot.classList.add("active");
-        statusText.textContent = "Scanner actif";
-        showMessage("Scanner activé", "info");
-      });
-
-      // Stop
-      stopBtn.addEventListener("click", () => {
-        stopScanner(video);
-        statusDot.classList.remove("active");
-        statusText.textContent = "Scanner désactivé";
-        showMessage("Scanner arrêté", "info");
-      });
-
-      // Realtime updates
-      const q = query(
-        collection(db, "attendance"),
-        orderBy("timestamp", "desc"),
-        limit(5),
-      );
-      onSnapshot(q, (snapshot) => {
-        const scans = [];
-        snapshot.forEach((doc) => scans.push({ id: doc.id, ...doc.data() }));
-
-        const scansList = document.getElementById("recent-scans-list");
-        if (scans.length > 0) {
-          scansList.innerHTML = scans
-            .map(
-              (scan) => `
-          <div class="scan-item">
-            <span class="scan-name">
-              <i class="fas fa-check-circle" style="color: var(--success);"></i>
-              ${scan.name || "Participant"}
-            </span>
-            <span class="scan-time">
-              ${scan.timestamp ? new Date(scan.timestamp.toDate()).toLocaleTimeString() : ""}
-            </span>
-          </div>
-        `,
-            )
-            .join("");
-        }
-
-        document.getElementById("today-count").textContent = scans.length;
-      });
+      startBtn.addEventListener("click", () => startScanner(video));
+      stopBtn.addEventListener("click", () => stopScanner(video));
     </script>
   </body>
 </html>
