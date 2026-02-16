@@ -1,70 +1,54 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OMC · Scanner</title>
+
+    <!-- Fonts & Icons -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
     />
-    <title>OMC Attendance Scanner · Premium</title>
-    <link rel="stylesheet" href="style.css" />
-    <!-- Font Awesome pour les icônes -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
-    <!-- Google Fonts - Inter -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
-      <!-- Header avec icône -->
-      <div style="text-align: center; margin-bottom: 2rem">
+      <!-- Header simple -->
+      <h1>OMC Attendance</h1>
+      <div class="subtitle">
         <i
           class="fas fa-qrcode"
-          style="
-            font-size: 3rem;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-          "
+          style="color: var(--primary); margin-right: 6px"
         ></i>
-        <h1>OMC Attendance</h1>
-        <p style="color: var(--gray)">Scanner de présence premium</p>
+        Scanner de présence
       </div>
 
-      <!-- Scanner Section -->
-      <div class="scanner-container">
-        <div class="video-wrapper">
-          <video id="video" autoplay playsinline></video>
-          <div class="scanner-overlay"></div>
-        </div>
-
-        <!-- Status Indicator -->
-        <div class="status-indicator">
-          <span class="status-dot" id="status-dot"></span>
-          <span id="status-text">Scanner désactivé</span>
-        </div>
-
-        <!-- Scanner Hint -->
-        <div class="scanner-hint">
-          <i class="fas fa-camera"></i>
-          <span>Positionnez le QR code dans le cadre</span>
-        </div>
+      <!-- Vidéo -->
+      <div class="video-container">
+        <video id="video" autoplay playsinline></video>
       </div>
 
-      <!-- Controls -->
-      <div class="controls">
-        <button id="start-btn" class="btn-primary">
-          <i class="fas fa-play" style="margin-right: 8px"></i>
+      <!-- Statut -->
+      <div class="status">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Scanner désactivé</span>
+      </div>
+
+      <!-- Boutons -->
+      <div class="buttons">
+        <button id="start-btn" class="btn btn-start">
+          <i class="fas fa-play"></i>
           Démarrer
         </button>
-        <button id="stop-btn" class="btn-secondary">
-          <i class="fas fa-stop" style="margin-right: 8px"></i>
+        <button id="stop-btn" class="btn btn-stop">
+          <i class="fas fa-stop"></i>
           Arrêter
         </button>
       </div>
@@ -72,44 +56,39 @@
       <!-- Messages -->
       <div id="message-container"></div>
 
-      <!-- Stats Section -->
-      <div class="stats-section" id="stats-section">
+      <!-- Stats minimales -->
+      <div class="stats">
         <div class="stat-card">
-          <div class="stat-label">Scans aujourd'hui</div>
-          <div class="stat-value" id="today-count">0</div>
+          <div class="stat-label">Aujourd'hui</div>
+          <div class="stat-number" id="today-count">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Total participants</div>
-          <div class="stat-value" id="total-count">-</div>
+          <div class="stat-label">Total</div>
+          <div class="stat-number" id="total-count">-</div>
         </div>
       </div>
 
-      <!-- Recent Scans -->
-      <div class="recent-scans">
-        <h3>
-          <i class="fas fa-history" style="margin-right: 8px"></i>Scans récents
-        </h3>
-        <div class="scans-list" id="recent-scans-list">
-          <!-- Les scans récents apparaîtront ici -->
-          <div
-            class="scan-item"
-            style="justify-content: center; color: var(--gray)"
-          >
-            <i class="fas fa-hourglass-half"></i> En attente de scans...
-          </div>
+      <!-- Scans récents -->
+      <div class="recent-title">
+        <i class="fas fa-clock"></i>
+        Derniers scans
+      </div>
+      <div class="scans-list" id="recent-scans-list">
+        <div class="scan-item">
+          <span class="scan-name">
+            <i
+              class="fas fa-circle"
+              style="font-size: 8px; color: var(--gray)"
+            ></i>
+            Aucun scan pour l'instant
+          </span>
         </div>
       </div>
 
-      <!-- Footer -->
-      <div
-        style="
-          margin-top: 2rem;
-          font-size: 0.8rem;
-          color: var(--gray);
-          text-align: center;
-        "
-      >
-        <i class="fas fa-shield-alt"></i> Scan sécurisé · OMC Event 2026
+      <!-- Hint -->
+      <div class="hint">
+        <i class="fas fa-camera"></i>
+        Placez le QR code dans le cadre
       </div>
     </div>
 
@@ -119,10 +98,9 @@
     <script type="module" src="./js/scanner.js"></script>
     <script type="module" src="./js/ui.js"></script>
 
-    <!-- Main App Script -->
     <script type="module">
       import { startScanner, stopScanner } from "./js/scanner.js";
-      import { showMessage, updateStats, addToRecentScans } from "./js/ui.js";
+      import { showMessage } from "./js/ui.js";
       import { db } from "./js/firebase.js";
       import {
         collection,
@@ -138,22 +116,23 @@
       const statusDot = document.getElementById("status-dot");
       const statusText = document.getElementById("status-text");
 
-      // Gestionnaires de boutons
+      // Start
       startBtn.addEventListener("click", () => {
         startScanner(video);
         statusDot.classList.add("active");
         statusText.textContent = "Scanner actif";
-        showMessage("Scanner activé - Prêt à scanner", "info");
+        showMessage("Scanner activé", "info");
       });
 
+      // Stop
       stopBtn.addEventListener("click", () => {
         stopScanner(video);
         statusDot.classList.remove("active");
         statusText.textContent = "Scanner désactivé";
-        showMessage("Scanner désactivé", "info");
+        showMessage("Scanner arrêté", "info");
       });
 
-      // Écouter les changements en temps réel
+      // Realtime updates
       const q = query(
         collection(db, "attendance"),
         orderBy("timestamp", "desc"),
@@ -161,11 +140,8 @@
       );
       onSnapshot(q, (snapshot) => {
         const scans = [];
-        snapshot.forEach((doc) => {
-          scans.push({ id: doc.id, ...doc.data() });
-        });
+        snapshot.forEach((doc) => scans.push({ id: doc.id, ...doc.data() }));
 
-        // Mettre à jour les scans récents
         const scansList = document.getElementById("recent-scans-list");
         if (scans.length > 0) {
           scansList.innerHTML = scans
@@ -173,7 +149,7 @@
               (scan) => `
           <div class="scan-item">
             <span class="scan-name">
-              <i class="fas fa-user-check" style="color: var(--success); margin-right: 8px;"></i>
+              <i class="fas fa-check-circle" style="color: var(--success);"></i>
               ${scan.name || "Participant"}
             </span>
             <span class="scan-time">
@@ -185,12 +161,8 @@
             .join("");
         }
 
-        // Mettre à jour le compteur
         document.getElementById("today-count").textContent = scans.length;
       });
-
-      // Message de bienvenue
-      showMessage("👋 Bienvenue ! Prêt à scanner", "info");
     </script>
   </body>
 </html>
