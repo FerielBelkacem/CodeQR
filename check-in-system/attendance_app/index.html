@@ -2,43 +2,195 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OMC Attendance Scanner</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>OMC Attendance Scanner · Premium</title>
     <link rel="stylesheet" href="style.css" />
+    <!-- Font Awesome pour les icônes -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <!-- Google Fonts - Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div class="container">
-      <h1>OMC Attendance</h1>
+      <!-- Header avec icône -->
+      <div style="text-align: center; margin-bottom: 2rem">
+        <i
+          class="fas fa-qrcode"
+          style="
+            font-size: 3rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+          "
+        ></i>
+        <h1>OMC Attendance</h1>
+        <p style="color: var(--gray)">Scanner de présence premium</p>
+      </div>
 
-      <!-- Video feed for QR scanning -->
-      <video id="video" width="300" height="400"></video>
+      <!-- Scanner Section -->
+      <div class="scanner-container">
+        <div class="video-wrapper">
+          <video id="video" autoplay playsinline></video>
+          <div class="scanner-overlay"></div>
+        </div>
 
-      <!-- Buttons -->
+        <!-- Status Indicator -->
+        <div class="status-indicator">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">Scanner désactivé</span>
+        </div>
+
+        <!-- Scanner Hint -->
+        <div class="scanner-hint">
+          <i class="fas fa-camera"></i>
+          <span>Positionnez le QR code dans le cadre</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
       <div class="controls">
-        <button id="start-btn">Start Scanner</button>
-        <button id="stop-btn">Stop Scanner</button>
+        <button id="start-btn" class="btn-primary">
+          <i class="fas fa-play" style="margin-right: 8px"></i>
+          Démarrer
+        </button>
+        <button id="stop-btn" class="btn-secondary">
+          <i class="fas fa-stop" style="margin-right: 8px"></i>
+          Arrêter
+        </button>
       </div>
 
       <!-- Messages -->
       <div id="message-container"></div>
+
+      <!-- Stats Section -->
+      <div class="stats-section" id="stats-section">
+        <div class="stat-card">
+          <div class="stat-label">Scans aujourd'hui</div>
+          <div class="stat-value" id="today-count">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total participants</div>
+          <div class="stat-value" id="total-count">-</div>
+        </div>
+      </div>
+
+      <!-- Recent Scans -->
+      <div class="recent-scans">
+        <h3>
+          <i class="fas fa-history" style="margin-right: 8px"></i>Scans récents
+        </h3>
+        <div class="scans-list" id="recent-scans-list">
+          <!-- Les scans récents apparaîtront ici -->
+          <div
+            class="scan-item"
+            style="justify-content: center; color: var(--gray)"
+          >
+            <i class="fas fa-hourglass-half"></i> En attente de scans...
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div
+        style="
+          margin-top: 2rem;
+          font-size: 0.8rem;
+          color: var(--gray);
+          text-align: center;
+        "
+      >
+        <i class="fas fa-shield-alt"></i> Scan sécurisé · OMC Event 2026
+      </div>
     </div>
 
+    <!-- Scripts -->
     <script type="module" src="./js/firebase.js"></script>
-
-    <!-- QR decoder library -->
     <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <script type="module" src="./js/scanner.js"></script>
+    <script type="module" src="./js/ui.js"></script>
 
-    <!-- Our modules -->
+    <!-- Main App Script -->
     <script type="module">
       import { startScanner, stopScanner } from "./js/scanner.js";
-      import { showMessage } from "./js/ui.js";
+      import { showMessage, updateStats, addToRecentScans } from "./js/ui.js";
+      import { db } from "./js/firebase.js";
+      import {
+        collection,
+        query,
+        orderBy,
+        limit,
+        onSnapshot,
+      } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
       const video = document.getElementById("video");
       const startBtn = document.getElementById("start-btn");
       const stopBtn = document.getElementById("stop-btn");
+      const statusDot = document.getElementById("status-dot");
+      const statusText = document.getElementById("status-text");
 
-      startBtn.addEventListener("click", () => startScanner(video));
-      stopBtn.addEventListener("click", () => stopScanner(video));
+      // Gestionnaires de boutons
+      startBtn.addEventListener("click", () => {
+        startScanner(video);
+        statusDot.classList.add("active");
+        statusText.textContent = "Scanner actif";
+        showMessage("Scanner activé - Prêt à scanner", "info");
+      });
+
+      stopBtn.addEventListener("click", () => {
+        stopScanner(video);
+        statusDot.classList.remove("active");
+        statusText.textContent = "Scanner désactivé";
+        showMessage("Scanner désactivé", "info");
+      });
+
+      // Écouter les changements en temps réel
+      const q = query(
+        collection(db, "attendance"),
+        orderBy("timestamp", "desc"),
+        limit(5),
+      );
+      onSnapshot(q, (snapshot) => {
+        const scans = [];
+        snapshot.forEach((doc) => {
+          scans.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Mettre à jour les scans récents
+        const scansList = document.getElementById("recent-scans-list");
+        if (scans.length > 0) {
+          scansList.innerHTML = scans
+            .map(
+              (scan) => `
+          <div class="scan-item">
+            <span class="scan-name">
+              <i class="fas fa-user-check" style="color: var(--success); margin-right: 8px;"></i>
+              ${scan.name || "Participant"}
+            </span>
+            <span class="scan-time">
+              ${scan.timestamp ? new Date(scan.timestamp.toDate()).toLocaleTimeString() : ""}
+            </span>
+          </div>
+        `,
+            )
+            .join("");
+        }
+
+        // Mettre à jour le compteur
+        document.getElementById("today-count").textContent = scans.length;
+      });
+
+      // Message de bienvenue
+      showMessage("👋 Bienvenue ! Prêt à scanner", "info");
     </script>
   </body>
 </html>
