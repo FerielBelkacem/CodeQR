@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OMC Attendance Scanner</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>OMC Attendance</h1>
+
+      <!-- Video feed for QR scanning -->
+      <video id="video" width="300" height="400"></video>
+
+      <!-- Buttons -->
+      <div class="controls">
+        <button id="start-btn">Start Scanner</button>
+        <button id="stop-btn">Stop Scanner</button>
+      </div>
+
+      <!-- Messages -->
+      <div id="message-container"></div>
+    </div>
+
+    <script type="module" src="./js/firebase.js"></script>
+
+    <!-- QR decoder library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
+    <!-- Our modules -->
+    <script type="module">
+      import { startScanner, stopScanner } from "./js/scanner.js";
+      import { showMessage } from "./js/ui.js";
+
+      const video = document.getElementById("video");
+      const startBtn = document.getElementById("start-btn");
+      const stopBtn = document.getElementById("stop-btn");
+
+      startBtn.addEventListener("click", () => startScanner(video));
+      stopBtn.addEventListener("click", () => stopScanner(video));
+    </script>
+  </body>
+</html>
